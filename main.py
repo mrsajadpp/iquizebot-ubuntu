@@ -29,23 +29,15 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+from datetime import datetime
 
 
 def convert_date(date):
     try:
-        # Split the date into parts
         date_parts = date.split("/")
-        
-        # Ensure we have exactly three parts
-        if len(date_parts) != 3:
-            raise ValueError(f"Invalid date format: {date}. Expected DD/MM/YYYY.")
-        
-        # Return the formatted date
-        return f"{date_parts[0]}{date_parts[1]}{date_parts[2]}"
-    
-    except (IndexError, ValueError) as e:
-        raise ValueError(f"Invalid date format: {date}. Expected DD/MM/YYYY.") from e
-
+        return f"{date_parts[1]}{date_parts[0]}{date_parts[2]}"
+    except IndexError:
+        raise ValueError(f"Invalid date format: {date}. Expected DD/MM/YYYY.")
 
 
 def load_data(file_path):
@@ -66,7 +58,7 @@ def scroll_to_element(driver, element):
 
 
 def fill_form(data):
-    driver = webdriver.Chrome()
+    driver = webdriver.Firefox()
     wait = WebDriverWait(driver, 10)
 
     try:
@@ -92,10 +84,17 @@ def fill_form(data):
         email_field = driver.find_element(By.ID, "email")
         scroll_to_element(driver, email_field)
         email_field.send_keys(data["email"])
+        time.sleep(1)
+        
+        dob_formatted = datetime.strptime(data["dob"], "%m/%d/%Y").strftime("%Y-%m-%d")
 
         dob_input = driver.find_element(By.ID, "dob")
         scroll_to_element(driver, dob_input)
-        dob_input.send_keys(data["dob"])
+        dob_input.send_keys(dob_formatted)
+        
+        dob_script =f'document.getElementById("dob").value = "{dob_formatted}";'
+        driver.execute_script(dob_script)
+        time.sleep(1)
 
         role_tab_script = """
             const elements = document.querySelectorAll('.role-tab');
